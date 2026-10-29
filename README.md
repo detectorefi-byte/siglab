@@ -1,84 +1,302 @@
 # 🛡️ SigLab
+### Windows Authenticode Research & PE Signature Analysis
 
-> **⚠️ EDUCATIONAL & LAB USE ONLY.** SigLab is a security-research tool for studying Windows Authenticode internals in isolated virtual machines. **Do not run it on production systems, systems you do not own, or without explicit written authorisation.** See [Legal Notice](#-legal-notice).
+<p align="center">
+  <img src="https://img.shields.io/badge/Language-C%2B%2B17-00599C?style=for-the-badge&logo=cplusplus" alt="C++17">
+  <img src="https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows" alt="Windows">
+  <img src="https://img.shields.io/badge/IDE-Visual%20Studio-5C2D91?style=for-the-badge&logo=visualstudio" alt="Visual Studio">
+  <img src="https://img.shields.io/badge/Focus-Security%20Research-orange?style=for-the-badge" alt="Security Research">
+  <img src="https://img.shields.io/badge/Status-Educational-blue?style=for-the-badge" alt="Educational Project">
+</p>
 
-![C++](https://img.shields.io/badge/C%2B%2B-17-blue?style=for-the-badge&logo=c%2B%2B)
-![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows)
-![Toolset](https://img.shields.io/badge/VS2022-v143-purple?style=for-the-badge&logo=visual-studio)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Educational-orange?style=for-the-badge)
-
-**SigLab** is an open-source C++ console toolkit designed to explore how Windows PE Authenticode signature verification works internally. It is built for security researchers, reverse engineers, and students who want to understand the PE certificate table, CryptoAPI SIP providers, and the `WinVerifyTrust` trust pipeline — all within an isolated lab VM.
-
-SigLab is **not** a malware development tool or a signing bypass for production. It grafts a donor's PKCS#7 certificate table onto a target PE file, then demonstrates how registry-level SIP redirection affects `WinVerifyTrust`.
-
----
-
-## 📑 Table of Contents
-1. [⚠️ Educational Use Only](#-educational-use-only)
-2. [What SigLab Demonstrates](#-what-siglab-demonstrates)
-3. [Features](#-features)
-4. [System Architecture](#️-system-architecture)
-5. [Execution Flow (One-Shot)](#️-execution-flow-one-shot)
-6. [How Signature Grafting Works](#-how-signature-grafting-works)
-7. [Quick Start & Build](#-quick-start--build)
-8. [Command-Line Reference](#-command-line-reference)
-9. [Legal Notice](#️-legal-notice)
+> **⚠️ Educational & Authorized Research Only**
+>
+> SigLab is a Windows security research project focused on PE executable signatures and Authenticode verification. Conduct experiments only in isolated laboratory environments using systems and files you are authorized to analyze.
 
 ---
 
-## ⚠️ Educational Use Only
+## 📌 Repository
 
-This tool is published **for educational and authorised security-research purposes only**.
+**GitHub:** https://github.com/detectorefi-byte/siglab
 
-- ✅ **Allowed:** Authorised penetration testing, isolated VM labs, academic research, learning Windows internals.
-- ❌ **Not allowed:** Malware development, bypassing security on systems you don't own, modifying signatures on third-party software, any use violating local or international law.
+**Clone the repository:**
 
-**You are solely responsible** for how you use this tool. The author accepts **no liability** for misuse, damage, or legal consequences. Using SigLab on systems you do not own is **illegal** under the CFAA, UK Computer Misuse Act, and equivalent laws worldwide.
-
-**Before every test:**
-1. Take a VM snapshot.
-2. Confirm you own the target machine.
-3. Run `SigLab.exe --clean` when finished.
+```bash
+git clone https://github.com/detectorefi-byte/siglab.git
+cd siglab
+```
 
 ---
 
-## 🎓 What SigLab Demonstrates
+## 📖 Overview
 
-SigLab is a teaching tool. Each run illustrates how Windows decides whether a binary is trusted.
+**SigLab** is a C++ research toolkit designed to explore how Windows handles executable signature metadata and evaluates application trust.
 
-| Concept | What you learn |
+The project investigates the relationship between the Portable Executable (PE) format, Authenticode signatures, PKCS#7/CMS structures, Cryptographic Subject Interface Packages (SIPs), and the Windows `WinVerifyTrust` API.
+
+SigLab is intended for:
+
+- Windows internals researchers
+- Reverse engineers
+- Digital forensics practitioners
+- Application security researchers
+- Students studying Windows executable formats
+- Developers interested in code-signing mechanisms
+
+The goal is to make Windows trust-verification mechanisms easier to inspect, understand, and document.
+
+---
+
+## 🎯 Research Objectives
+
+SigLab explores several important Windows security concepts:
+
+- PE headers and executable structure
+- Embedded certificate-table metadata
+- Authenticode signature verification
+- PKCS#7 and CMS signed-data structures
+- Executable digest validation
+- Windows trust-verification interfaces
+- Cryptographic SIP configuration
+- Windows code-integrity reporting
+- Reproducible security research in isolated environments
+
+---
+
+## ✨ Features & Research Areas
+
+| Component | Description |
 |---|---|
-| **PE Certificate Table** | How `DataDirectory[4]` points to an embedded `WIN_CERTIFICATE` blob. |
-| **PKCS#7 / CMS** | How an Authenticode signature is a CMS `SignedData` object with `signerInfos`. |
-| **Digest Binding** | Why a byte-copied signature fails `TRUST_E_BAD_DIGEST` (the digest belongs to the donor). |
-| **CryptoAPI SIP** | How `CryptSIPDllVerifyIndirectData` is dispatched per file type via the registry. |
-| **FinalPolicy Provider** | How `WinVerifyTrust` ends in a `SoftpubAuthenticode` call. |
-| **Code Integrity Flags** | How `SystemCodeIntegrityInformation` exposes HVCI, UMCI, and Smart App Control state. |
+| 🔍 PE Inspection | Examines PE headers and certificate-table metadata. |
+| 🔏 Authenticode Research | Investigates executable signature-verification behavior. |
+| 🧬 PKCS#7/CMS Analysis | Explores cryptographic signed-data structures. |
+| 🧪 Digest Validation | Studies the relationship between executable content and signature integrity. |
+| ⚙️ Windows Trust APIs | Researches the `WinVerifyTrust` verification pipeline. |
+| 🗂️ SIP Research | Examines Windows file-type-specific signature processing. |
+| 🛡️ Code Integrity | Investigates Windows code-integrity reporting interfaces. |
+| 🧹 Configuration Recovery | Documents safe restoration and verification of lab configurations. |
 
----
-
-## ✨ Features
-
-- 🔍 **PE Inspection** — Parses DOS/NT headers, validates `DataDirectory[4]`, detects existing signatures.
-- 🧬 **Signature Grafting** — Copies a donor's `WIN_CERTIFICATE` table onto a target, 8-byte aligned, with `Security` directory repointing.
-- 🗂️ **PKCS#7 Payload** — Hand-rolled ASN.1 DER parser for `unsignedAttrs`, with optional "camouflage" nesting.
-- ⚙️ **SIP Bypass Installer** — Writes lab-only registry overrides for all 19 SIP types (64-bit and 32-bit views).
-- 🛡️ **FinalPolicy Redirect** — Demonstrates redirecting `SoftpubAuthenticode` → `SoftpubCleanup`.
-- 🧪 **Code Integrity Probe** — Read-only report of CI flags, HVCI, UMCI, Smart App Control.
-- 🧾 **Fresh-Process Verifier** — Re-runs `WinVerifyTrust` in a child process to reflect policy changes.
-- 🧹 **Clean / Restore** — Per-type SIP defaults, legacy-key removal, FinalPolicy restore.
+**Note:** Actual functionality depends on the implementation in the current source code. The table describes research areas, not independently verified test results.
 
 ---
 
 ## 🏗️ System Architecture
 
-SigLab is highly modular. Here is how the source files interact:
+The project is organized around a command-line interface and specialized components for executable inspection and signature-related data analysis.
 
 ```mermaid
-graph TD
-    CLI["cli.cpp (UI/Menus)"] --> PE["pe_signature.h (PE Parsing)"]
-    CLI --> SIP["sip_registry.h (Registry)"]
-    CLI --> PKCS["pkcs7_payload.h (ASN.1)"]
-    PE -.-> WIN["wintrust.lib"]
-    SIP -.-> REG["HKLM Registry"]
+flowchart TD
+    A["Command-Line Interface<br/>cli.cpp"]
+    B["PE Signature Analysis<br/>pe_signature.h"]
+    C["PKCS#7 Data Analysis<br/>pkcs7_payload.h"]
+    D["SIP Configuration Research<br/>sip_registry.h"]
+    E["Windows Trust APIs"]
+    F["Analysis Results"]
+
+    A --> B
+    A --> C
+    A --> D
+    B --> E
+    C --> F
+    D --> F
+    E --> F
+```
+
+### Source Code Structure
+
+```text
+siglab/
+├── src/
+│   ├── cli.cpp
+│   ├── pe_signature.h
+│   ├── pkcs7_payload.h
+│   └── sip_registry.h
+├── SigLab.sln
+├── SigLab.vcxproj
+├── SigLab.vcxproj.filters
+├── .gitignore
+└── README.md
+```
+
+The directory structure above reflects the expected project layout. Adjust it if the actual repository differs.
+
+---
+
+## 🧰 Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| C++ | Core implementation |
+| Microsoft Visual Studio | Development and compilation |
+| Windows SDK | Windows development interfaces |
+| Portable Executable (PE) | Executable file format under investigation |
+| `WinVerifyTrust` | Windows trust-verification interface |
+| PKCS#7/CMS | Cryptographic signed-data formats |
+
+The configured C++ standard, Windows SDK version, compiler toolset, and dependencies should be confirmed in the Visual Studio project files.
+
+---
+
+## 💻 Requirements
+
+Before building SigLab, verify that you have:
+
+- Windows 10 or Windows 11
+- Microsoft Visual Studio
+- The Desktop development with C++ workload
+- A compatible Windows SDK
+- The compiler toolset configured in `SigLab.vcxproj`
+- Any additional dependencies required by the source code
+
+Exact requirements may vary depending on the project's configuration.
+
+---
+
+## 🚀 Build Instructions
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/detectorefi-byte/siglab.git
+cd siglab
+```
+
+### 2. Open the Visual Studio solution
+
+Open `SigLab.sln` in Microsoft Visual Studio.
+
+### 3. Review the project configuration
+
+Check the following settings:
+
+- Windows SDK version
+- Target architecture
+- Build configuration
+- C++ language standard
+- Compiler toolset
+- Required libraries and dependencies
+
+### 4. Build the solution
+
+In Visual Studio:
+
+1. Select the appropriate configuration and platform.
+2. Open the **Build** menu.
+3. Select **Build Solution**.
+4. Review the Output window for errors.
+
+### 5. Verify the build
+
+Confirm that the compilation succeeds and that the expected executable is generated in the configured output directory.
+
+Test only in an isolated lab environment.
+
+---
+
+## 🔬 Research Methodology
+
+For consistent and reproducible results, use the following workflow:
+
+1. Record the Windows version and development toolchain.
+2. Use test executables you own or are authorized to analyze.
+3. Record baseline signature-verification results.
+4. Inspect the relevant PE structures and signature metadata.
+5. Compare observations against documented Windows behavior.
+6. Preserve relevant logs and test results.
+7. Record any configuration changes made during the experiment.
+8. Restore the original lab environment and verify recovery.
+
+### Important Distinctions
+
+A certificate table being present does not necessarily mean that an executable has a valid signature.
+
+These are distinct properties:
+
+- **Signature presence:** Signature-related data exists in the file.
+- **Integrity validation:** The signature correctly authenticates the relevant content.
+- **Certificate validation:** The certificate and its chain satisfy applicable validation requirements.
+- **Trust evaluation:** Windows evaluates the signature under the applicable verification policy.
+
+Understanding these distinctions is essential when researching executable trust.
+
+---
+
+## 🛡️ Security Considerations
+
+SigLab investigates Windows components that can affect security-sensitive trust decisions.
+
+Follow these precautions:
+
+- Prefer read-only inspection wherever possible.
+- Use disposable virtual machines for experiments.
+- Create a recoverable snapshot before testing configuration changes.
+- Do not modify third-party software without authorization.
+- Avoid experimental trust-policy changes on production systems.
+- Keep a record of the initial configuration and all changes.
+- Verify that the laboratory environment has been restored after testing.
+
+A research result should not be interpreted as proof that an executable is safe or malicious without additional evidence.
+
+---
+
+## 🧪 Testing & Validation
+
+When documenting a test, include:
+
+| Field | Information |
+|---|---|
+| Operating System | Windows version and build |
+| Architecture | x64 or other applicable architecture |
+| Toolchain | Visual Studio and compiler version |
+| Test Input | Authorized test executable |
+| Initial State | Baseline signature-verification result |
+| Observation | Actual behavior recorded during testing |
+| Final State | Verification that the environment was restored |
+
+Only report features as tested or verified after reproducing the corresponding behavior.
+
+---
+
+## ⚖️ Legal Disclaimer
+
+SigLab is intended for educational purposes and authorized security research.
+
+Users are responsible for complying with applicable laws, organizational policies, software licenses, and authorization requirements.
+
+Do not use this project for unauthorized access, unlawful tampering, or activities intended to evade security controls.
+
+The project is provided for research and educational use without warranties. No guarantee is made regarding suitability for a particular purpose, compatibility, or results.
+
+---
+
+## 🤝 Contributing
+
+Contributions that improve documentation, correctness, testing, reproducibility, and defensive security research are welcome.
+
+When proposing changes:
+
+1. Describe the problem or research objective.
+2. Document relevant Windows and toolchain versions.
+3. Provide reproducible test results where possible.
+4. Explain relevant compatibility or security considerations.
+5. Keep changes focused and clearly documented.
+
+---
+
+## 📄 License & Usage Permissions
+
+No open-source license has been specified for this repository.
+
+The repository is publicly accessible on GitHub, but public visibility does not automatically grant permission to copy, modify, redistribute, or commercially reuse its contents.
+
+All rights not otherwise granted remain with the applicable copyright holder. Third-party components may be subject to their own licenses.
+
+---
+
+<p align="center">
+  <b>SigLab</b>
+  <br>
+  Windows Internals · Authenticode Research · Digital Forensics
+  <br><br>
+  <a href="https://github.com/detectorefi-byte/siglab">View Repository</a>
+</p>
