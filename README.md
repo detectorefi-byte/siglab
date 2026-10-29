@@ -77,14 +77,8 @@ SigLab is highly modular. Here is how the source files interact:
 
 ```mermaid
 graph TD
-    CLI["cli.cpp<br/>Console UI / Pipeline / Menus"] 
-    PE["pe_signature.h<br/>PE Parsing / Grafting / WinVerifyTrust"]
-    SIP["sip_registry.h<br/>SIP & FinalPolicy Registry Writes"]
-    PKCS["pkcs7_payload.h<br/>ASN.1 DER Embed & Extract"]
-    
-    CLI --> PE
-    CLI --> SIP
-    CLI --> PKCS
-    
-    PE -.-> WIN["wintrust.lib / crypt32.lib"]
-    SIP -.-> REG["HKLM Registry Keys"]
+    CLI["cli.cpp"] --> PE["pe_signature.h"]
+    CLI --> SIP["sip_registry.h"]
+    CLI --> PKCS["pkcs7_payload.h"]
+    PE -.-> WIN["wintrust.lib"]
+    SIP -.-> REG["HKLM Registry"]
